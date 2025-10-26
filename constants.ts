@@ -1,0 +1,63 @@
+import { Item, ItemStatus } from './types';
+
+export const STATUS_CONFIG: { [key in ItemStatus]: { label: string; color: string; bgColor: string } } = {
+    [ItemStatus.New]: { label: 'جديد', color: 'text-blue-800 dark:text-blue-200', bgColor: 'bg-blue-100 dark:bg-blue-900' },
+    [ItemStatus.InProgress]: { label: 'قيد المعالجة', color: 'text-yellow-800 dark:text-yellow-200', bgColor: 'bg-yellow-100 dark:bg-yellow-900' },
+    [ItemStatus.Delivered]: { label: 'تم التسليم', color: 'text-green-800 dark:text-green-200', bgColor: 'bg-green-100 dark:bg-green-900' },
+    [ItemStatus.Cancelled]: { label: 'ملغي', color: 'text-red-800 dark:text-red-200', bgColor: 'bg-red-100 dark:bg-red-900' },
+};
+
+export const INITIAL_ITEMS: Item[] = [
+    {
+        id: 1,
+        barcode: '123456789012',
+        receivedAt: new Date('2023-10-26T10:00:00Z').toISOString(),
+        customerName: 'أحمد علي',
+        specs: 'لابتوب Dell XPS 15, 16GB RAM, 512GB SSD',
+        quantity: 1,
+        unitPrice: 5500,
+        totalPrice: 5500,
+        notes: 'توصيل عاجل مطلوب.',
+        deliveryDate: new Date('2023-10-28T15:00:00Z').toISOString(),
+        status: ItemStatus.Delivered,
+    },
+    {
+        id: 2,
+        barcode: '987654321098',
+        receivedAt: new Date('2023-10-27T11:30:00Z').toISOString(),
+        customerName: 'فاطمة الزهراء',
+        specs: 'هاتف Samsung Galaxy S23 Ultra, 256GB, أسود',
+        quantity: 2,
+        unitPrice: 4500,
+        totalPrice: 9000,
+        notes: '',
+        deliveryDate: null,
+        status: ItemStatus.InProgress,
+    },
+    {
+        id: 3,
+        barcode: '555555555555',
+        receivedAt: new Date('2023-10-27T14:00:00Z').toISOString(),
+        customerName: 'خالد بن الوليد',
+        specs: 'كرسي مكتب، مريح، ظهر شبكي',
+        quantity: 10,
+        unitPrice: 350,
+        totalPrice: 3500,
+        notes: 'يجب التجميع قبل التسليم.',
+        deliveryDate: new Date('2023-11-01T12:00:00Z').toISOString(),
+        status: ItemStatus.InProgress,
+    },
+     {
+        id: 4,
+        barcode: '112233445566',
+        receivedAt: new Date('2023-10-28T09:00:00Z').toISOString(),
+        customerName: 'سارة عبد الله',
+        specs: 'سماعات Sony WH-1000XM5',
+        quantity: 1,
+        unitPrice: 1500,
+        totalPrice: 1500,
+        notes: 'مطلوب تغليف كهدية.',
+        deliveryDate: null,
+        status: ItemStatus.New,
+    },
+];

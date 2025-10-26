@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>نظام مراقبة حركة الأصناف</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Tajawal', 'sans-serif'],
+            },
+            colors: {
+              primary: {"50":"#eff6ff","100":"#dbeafe","200":"#bfdbfe","300":"#93c5fd","400":"#60a5fa","500":"#3b82f6","600":"#2563eb","700":"#1d4ed8","800":"#1e40af","900":"#1e3a8a","950":"#172554"}
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        font-family: 'Tajawal', sans-serif;
+      }
+      @media print {
+        body {
+          background-color: white !important;
+        }
+        header, .print-hide {
+          display: none !important;
+        }
+        main {
+          padding: 0 !important;
+        }
+        .print-show {
+          display: block !important;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 10pt;
+        }
+        th, td {
+          border: 1px solid #ccc;
+          padding: 8px;
+          text-align: right;
+        }
+        thead {
+          background-color: #f2f2f2;
+        }
+        .bg-white.dark\:bg-gray-800.rounded-lg.shadow.p-6 {
+          box-shadow: none !important;
+          padding: 0 !important;
+          border: none !important;
+          border-radius: 0 !important;
+        }
+        tr {
+          page-break-inside: avoid;
+        }
+        .status-badge-print {
+           padding: 2px 5px;
+           border-radius: 9999px;
+           font-weight: 500;
+           border: 1px solid #ddd;
+        }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/"
+  }
+}
+</script>
+</head>
+  <body class="bg-gray-100 dark:bg-gray-900">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
