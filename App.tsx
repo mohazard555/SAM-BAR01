@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Item, ItemStatus } from './types';
 import { INITIAL_ITEMS, STATUS_CONFIG } from './constants';
 import { Header } from './components/Header';
@@ -8,23 +8,66 @@ import { ItemModal } from './components/ItemModal';
 import { FilterPanel } from './components/FilterPanel';
 import { AlertsPanel } from './components/AlertsPanel';
 import { LoginModal } from './components/LoginModal';
+import { SettingsModal } from './components/SettingsModal';
+import { Footer } from './components/Footer';
+import { CompanyInfoPanel } from './components/CompanyInfoPanel';
 import { ExportIcon, ImportIcon, PrintIcon } from './components/Icons';
 
+declare const XLSX: any; // For SheetJS library
+
 const App: React.FC = () => {
-    const [items, setItems] = useState<Item[]>(INITIAL_ITEMS);
-    const [filteredItems, setFilteredItems] = useState<Item[]>(INITIAL_ITEMS);
+    const [items, setItems] = useState<Item[]>(() => {
+        const savedItems = localStorage.getItem('inventoryItems');
+        return savedItems ? JSON.parse(savedItems) : INITIAL_ITEMS;
+    });
+    const [filteredItems, setFilteredItems] = useState<Item[]>(items);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<Item | null>(null);
     const [lastScannedBarcode, setLastScannedBarcode] = useState<string | null>(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-    
+    const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+
+    // Admin Credentials State
+    const [adminUsername, setAdminUsername] = useState('admin');
+    const [adminPassword, setAdminPassword] = useState('admin123');
+
+    // App Customization State
+    const [appName, setAppName] = useState('مراقبة حركة الأصناف');
+    const [appLogo, setAppLogo] = useState<string | null>(null);
+    const [managerName, setManagerName] = useState('المدير العام');
+    const [companyInfo, setCompanyInfo] = useState('العنوان: شارع المثال، المدينة | هاتف: 123-456-789');
+
     const [filters, setFilters] = useState({
         status: '',
         customer: '',
         dateFrom: '',
         dateTo: '',
     });
+
+    // Load settings from localStorage on initial load
+    useEffect(() => {
+        const savedAppName = localStorage.getItem('appName');
+        const savedAppLogo = localStorage.getItem('appLogo');
+        const savedManagerName = localStorage.getItem('managerName');
+        const savedCompanyInfo = localStorage.getItem('companyInfo');
+        const savedAdminUsername = localStorage.getItem('adminUsername');
+        const savedAdminPassword = localStorage.getItem('adminPassword');
+        
+        if (savedAppName) setAppName(savedAppName);
+        if (savedAppLogo) setAppLogo(savedAppLogo);
+        if (savedManagerName) setManagerName(savedManagerName);
+        if (savedCompanyInfo) setCompanyInfo(savedCompanyInfo);
+        if (savedAdminUsername) setAdminUsername(savedAdminUsername);
+        if (savedAdminPassword) setAdminPassword(savedAdminPassword);
+
+        document.title = savedAppName || 'نظام مراقبة حركة الأصناف';
+    }, []);
+    
+    // Save items to localStorage whenever they change
+    useEffect(() => {
+        localStorage.setItem('inventoryItems', JSON.stringify(items));
+    }, [items]);
 
     const applyFilters = useCallback(() => {
         let tempItems = [...items];
@@ -38,7 +81,7 @@ const App: React.FC = () => {
             tempItems = tempItems.filter(item => new Date(item.receivedAt) >= new Date(filters.dateFrom));
         }
         if (filters.dateTo) {
-            tempItems = tempItems.filter(item => new Date(item.receivedAt) <= new Date(filters.dateTo));
+            tempItems = tempItems.filter(item => new Date(item.receivedAt).setHours(0,0,0,0) <= new Date(filters.dateTo).setHours(0,0,0,0));
         }
         setFilteredItems(tempItems);
     }, [items, filters]);
@@ -63,7 +106,7 @@ const App: React.FC = () => {
                 totalPrice: 0,
                 notes: '',
                 deliveryDate: null,
-                status: ItemStatus.InProgress,
+                status: ItemStatus.New,
             });
         }
         setLastScannedBarcode(barcode);
@@ -95,12 +138,12 @@ const App: React.FC = () => {
         }
     };
 
-    const handleLogin = (password: string) => {
-        if (password === 'admin123') { // Hardcoded password for demo
+    const handleLogin = (username: string, password: string) => {
+        if (username === adminUsername && password === adminPassword) {
             setIsAdmin(true);
             setIsLoginModalOpen(false);
         } else {
-            alert('كلمة المرور غير صحيحة');
+            alert('اسم المستخدم أو كلمة المرور غير صحيحة');
         }
     };
     
@@ -108,68 +151,98 @@ const App: React.FC = () => {
         setIsAdmin(false);
     };
 
-    const exportToCSV = () => {
-        const headers = ['المعرف', 'الباركود', 'تاريخ الاستلام', 'اسم العميل', 'المواصفات', 'الكمية', 'سعر الوحدة', 'السعر الإجمالي', 'ملاحظات', 'تاريخ التسليم', 'الحالة'];
-        const rows = filteredItems.map(item => 
-            [
-                item.id,
-                item.barcode,
-                item.receivedAt,
-                item.customerName,
-                `"${item.specs.replace(/"/g, '""')}"`,
-                item.quantity,
-                item.unitPrice,
-                item.totalPrice,
-                `"${item.notes.replace(/"/g, '""')}"`,
-                item.deliveryDate || '',
-                STATUS_CONFIG[item.status].label
-            ].join(',')
-        );
-        const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers.join(','), ...rows].join('\n');
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "تصدير_المخزون.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    const handleSaveSettings = (settings: { 
+        appName: string; 
+        appLogo: string | null; 
+        managerName: string; 
+        companyInfo: string;
+        adminUsername: string;
+        adminPassword: string;
+    }) => {
+        setAppName(settings.appName);
+        localStorage.setItem('appName', settings.appName);
+        document.title = settings.appName;
+
+        setManagerName(settings.managerName);
+        localStorage.setItem('managerName', settings.managerName);
+        
+        setCompanyInfo(settings.companyInfo);
+        localStorage.setItem('companyInfo', settings.companyInfo);
+
+        if (settings.appLogo) {
+            setAppLogo(settings.appLogo);
+            localStorage.setItem('appLogo', settings.appLogo);
+        }
+        
+        if (settings.adminUsername) {
+            setAdminUsername(settings.adminUsername);
+            localStorage.setItem('adminUsername', settings.adminUsername);
+        }
+        if (settings.adminPassword) {
+            setAdminPassword(settings.adminPassword);
+            localStorage.setItem('adminPassword', settings.adminPassword);
+        }
     };
 
-    const importFromCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const exportToXLSX = () => {
+        const dataToExport = filteredItems.map(item => ({
+            'المعرف': item.id,
+            'الباركود': item.barcode,
+            'تاريخ الاستلام': new Date(item.receivedAt).toLocaleDateString('ar-EG'),
+            'اسم العميل': item.customerName,
+            'المواصفات': item.specs,
+            'الكمية': item.quantity,
+            'سعر الوحدة': item.unitPrice,
+            'السعر الإجمالي': item.totalPrice,
+            'ملاحظات': item.notes,
+            'تاريخ التسليم': item.deliveryDate ? new Date(item.deliveryDate).toLocaleDateString('ar-EG') : '',
+            'الحالة': STATUS_CONFIG[item.status].label,
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "الأصناف");
+        XLSX.writeFile(workbook, "تصدير_المخزون.xlsx");
+    };
+
+    const importFromXLSX = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
         const reader = new FileReader();
         reader.onload = (e) => {
-            const text = e.target?.result as string;
-            const rows = text.split('\n').slice(1);
-            const newItems: Item[] = rows.map(row => {
-                const columns = row.split(',');
-                if (columns.length < 11) return null;
-                // Basic validation for column mapping
-                 const statusKey = Object.keys(STATUS_CONFIG).find(key => STATUS_CONFIG[key as ItemStatus].label === columns[10].trim()) as ItemStatus | undefined;
+            const data = e.target?.result;
+            const workbook = XLSX.read(data, { type: 'binary' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(worksheet) as any[];
 
+            const statusReverseMap = Object.fromEntries(
+                Object.entries(STATUS_CONFIG).map(([key, val]) => [val.label, key])
+            );
+
+            const newItems: Item[] = json.map(row => {
+                 const statusKey = statusReverseMap[row['الحالة']] as ItemStatus | undefined;
                 return {
-                    id: parseInt(columns[0]) || Date.now() + Math.random(),
-                    barcode: columns[1],
-                    receivedAt: columns[2] || new Date().toISOString(),
-                    customerName: columns[3],
-                    specs: columns[4].replace(/""/g, '"').slice(1, -1),
-                    quantity: parseInt(columns[5]) || 0,
-                    unitPrice: parseFloat(columns[6]) || 0,
-                    totalPrice: parseFloat(columns[7]) || 0,
-                    notes: columns[8].replace(/""/g, '"').slice(1, -1),
-                    deliveryDate: columns[9] || null,
+                    id: row['المعرف'] || Date.now() + Math.random(),
+                    barcode: row['الباركود'],
+                    receivedAt: row['تاريخ الاستلام'] ? new Date(row['تاريخ الاستلام']).toISOString() : new Date().toISOString(),
+                    customerName: row['اسم العميل'],
+                    specs: row['المواصفات'],
+                    quantity: Number(row['الكمية']) || 0,
+                    unitPrice: Number(row['سعر الوحدة']) || 0,
+                    totalPrice: Number(row['السعر الإجمالي']) || 0,
+                    notes: row['ملاحظات'] || '',
+                    deliveryDate: row['تاريخ التسليم'] ? new Date(row['تاريخ التسليم']).toISOString() : null,
                     status: statusKey || ItemStatus.New,
                 };
-            }).filter((item): item is Item => item !== null);
+            }).filter(item => item && item.barcode);
 
-            // A simple merge strategy: update existing by barcode, add new ones.
             const updatedItems = [...items];
             newItems.forEach(newItem => {
                 const existingIndex = updatedItems.findIndex(i => i.barcode === newItem.barcode);
                 if (existingIndex > -1) {
-                    updatedItems[existingIndex] = { ...updatedItems[existingIndex], ...newItem };
+                    updatedItems[existingIndex] = { ...updatedItems[existingIndex], ...newItem, id: updatedItems[existingIndex].id };
                 } else {
                     updatedItems.unshift(newItem);
                 }
@@ -177,10 +250,46 @@ const App: React.FC = () => {
             setItems(updatedItems);
             alert(`تم استيراد ${newItems.length} صنف بنجاح.`);
         };
-        reader.readAsText(file);
-        event.target.value = ''; // Reset input
+        reader.readAsBinaryString(file);
+        event.target.value = '';
     };
-    
+
+    const exportJSON = () => {
+        const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(items, null, 2))}`;
+        const link = document.createElement("a");
+        link.href = jsonString;
+        link.download = "بيانات_النظام.json";
+        link.click();
+    };
+
+    const importJSON = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        if (!window.confirm("سيتم استبدال جميع البيانات الحالية. هل أنت متأكد من المتابعة؟")) {
+            event.target.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const text = e.target?.result as string;
+                const newItems = JSON.parse(text);
+                if (Array.isArray(newItems)) { // Basic validation
+                    setItems(newItems);
+                    alert("تم استيراد البيانات بنجاح.");
+                } else {
+                    throw new Error("Invalid file format");
+                }
+            } catch (error) {
+                alert("فشل استيراد الملف. يرجى التأكد من أن الملف بصيغة JSON صحيحة.");
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    };
+
     const handlePrint = () => {
         window.print();
     };
@@ -188,16 +297,33 @@ const App: React.FC = () => {
     const undeliveredItems = items.filter(item => item.status !== ItemStatus.Delivered);
 
     return (
-        <div className="min-h-screen text-gray-800 dark:text-gray-200">
-            <Header isAdmin={isAdmin} onLoginClick={() => setIsLoginModalOpen(true)} onLogoutClick={handleLogout} />
+        <div className="min-h-screen text-gray-800 dark:text-gray-200 flex flex-col">
+            <Header 
+                appName={appName}
+                appLogo={appLogo}
+                isAdmin={isAdmin} 
+                onLoginClick={() => setIsLoginModalOpen(true)} 
+                onLogoutClick={handleLogout}
+                onSettingsClick={() => setIsSettingsModalOpen(true)}
+            />
             
-            <div className="print-show hidden my-4 px-8">
-                <h1 className="text-2xl font-bold">تقرير حركة الأصناف</h1>
-                <p>تاريخ الطباعة: {new Date().toLocaleDateString('ar-EG')}</p>
+            <div className="print-show hidden my-4">
+                 <div className="print-header">
+                    <div className="print-header-info">
+                        <h1>{appName}</h1>
+                        <p>{companyInfo}</p>
+                    </div>
+                    {appLogo && <img src={appLogo} alt="Company Logo" />}
+                </div>
+                <h2 className="text-xl font-bold text-center my-4">تقرير حركة الأصناف</h2>
+                <div className="flex justify-between text-sm mt-2 mb-4">
+                    <p><strong>اسم المدير:</strong> {managerName}</p>
+                    <p><strong>تاريخ الطباعة:</strong> {new Date().toLocaleDateString('ar-EG')}</p>
+                </div>
                  {(filters.status || filters.customer || filters.dateFrom || filters.dateTo) && (
-                    <div className="text-sm mt-2 border-t pt-2">
+                    <div className="text-sm mt-2 border-t pt-2 mb-4">
                         <p className="font-semibold">الفلاتر المطبقة:</p>
-                        <ul className="list-none p-0">
+                        <ul className="list-none p-0 mr-4">
                             {filters.status && <li>- الحالة: {STATUS_CONFIG[filters.status as ItemStatus]?.label}</li>}
                             {filters.customer && <li>- العميل: {filters.customer}</li>}
                             {filters.dateFrom && <li>- من تاريخ: {new Date(filters.dateFrom).toLocaleDateString('ar-EG')}</li>}
@@ -207,13 +333,14 @@ const App: React.FC = () => {
                 )}
             </div>
 
-            <main className="p-4 sm:p-6 lg:p-8 print-hide">
+            <main className="flex-grow p-4 sm:p-6 lg:p-8 print-hide">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    {/* Right Panel (was Left) */}
+                    {/* Right Panel */}
                     <div className="lg:col-span-3">
                         <div className="space-y-6">
                            <FilterPanel items={items} filters={filters} onFilterChange={setFilters} onClearFilters={() => setFilters({ status: '', customer: '', dateFrom: '', dateTo: '' })} />
                            <AlertsPanel undeliveredItems={undeliveredItems} onAlertClick={(barcode) => handleScan(barcode)} />
+                           <CompanyInfoPanel info={companyInfo} />
                         </div>
                     </div>
 
@@ -223,12 +350,12 @@ const App: React.FC = () => {
                             <BarcodeScanner onScan={handleScan} />
                             {isAdmin && (
                                 <div className="mt-4 flex flex-col sm:flex-row gap-2 flex-wrap">
-                                    <button onClick={exportToCSV} className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                                    <button onClick={exportToXLSX} className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
                                         <ExportIcon /> تصدير إلى Excel
                                     </button>
                                     <label className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors cursor-pointer">
                                         <ImportIcon /> استيراد من Excel
-                                        <input type="file" accept=".csv" onChange={importFromCSV} className="hidden" />
+                                        <input type="file" accept=".xlsx, .xls" onChange={importFromXLSX} className="hidden" />
                                     </label>
                                      <button onClick={handlePrint} className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors">
                                         <PrintIcon /> طباعة التقرير
@@ -247,6 +374,8 @@ const App: React.FC = () => {
                     </div>
                 </div>
             </main>
+            
+            <Footer />
 
             {isModalOpen && editingItem && (
                 <ItemModal item={editingItem} onSave={handleSaveItem} onClose={handleCloseModal} />
@@ -254,6 +383,23 @@ const App: React.FC = () => {
 
             {isLoginModalOpen && (
                 <LoginModal onLogin={handleLogin} onClose={() => setIsLoginModalOpen(false)} />
+            )}
+
+            {isAdmin && isSettingsModalOpen && (
+                <SettingsModal 
+                    onClose={() => setIsSettingsModalOpen(false)}
+                    onSave={handleSaveSettings}
+                    currentSettings={{
+                        appName: appName,
+                        appLogo: appLogo,
+                        managerName: managerName,
+                        companyInfo: companyInfo,
+                        adminUsername: adminUsername,
+                        adminPassword: adminPassword,
+                    }}
+                    onExportJSON={exportJSON}
+                    onImportJSON={importJSON}
+                />
             )}
         </div>
     );

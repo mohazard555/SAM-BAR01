@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { UserIcon } from './Icons';
 
 interface LoginModalProps {
-    onLogin: (password: string) => void;
+    onLogin: (username: string, password: string) => void;
     onClose: () => void;
 }
 
@@ -12,7 +12,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onLogin, onClose }) => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onLogin(password);
+        onLogin(username, password);
     };
 
     return (
@@ -30,8 +30,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onLogin, onClose }) => {
                                 <input 
                                     type="text" 
                                     value={username} 
-                                    readOnly 
-                                    className="mt-1 block w-full bg-gray-100 dark:bg-gray-900 border-gray-300 dark:border-gray-600 rounded-md shadow-sm"
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    required
+                                    className="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700"
                                 />
                              </div>
                              <div>

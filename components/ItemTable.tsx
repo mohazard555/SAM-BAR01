@@ -69,7 +69,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, onEditItem, onDelet
                                 </div>
                             </th>
                         ))}
-                        <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider print-hide">
                            إجراءات
                         </th>
                     </tr>
@@ -93,12 +93,12 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, onEditItem, onDelet
                                         {config.label}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium print-hide">
                                     <div className="flex items-center justify-center gap-4">
-                                        <button onClick={() => onEditItem(item)} className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-200 print-hide" title="تعديل">
+                                        <button onClick={() => onEditItem(item)} className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-200" title="تعديل">
                                             <EditIcon />
                                         </button>
-                                        <button onClick={() => onDeleteItem(item.id)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200 print-hide" title="حذف">
+                                        <button onClick={() => onDeleteItem(item.id)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200" title="حذف">
                                             <DeleteIcon />
                                         </button>
                                     </div>

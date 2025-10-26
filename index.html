@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
       tailwind.config = {
         theme: {
@@ -25,38 +26,74 @@
     <style>
       body {
         font-family: 'Tajawal', sans-serif;
+        font-size: 105%;
       }
       @media print {
         body {
           background-color: white !important;
+          font-size: 10pt;
+          color: black;
         }
-        header, .print-hide {
+        header, footer, .print-hide {
           display: none !important;
         }
         main {
           padding: 0 !important;
+          margin: 0.5cm;
         }
         .print-show {
           display: block !important;
         }
+        .print-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #333;
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+        .print-header img {
+            max-height: 80px;
+            width: auto;
+        }
+        .print-header-info {
+            text-align: right;
+        }
+        .print-header-info h1 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1d4ed8;
+            margin: 0;
+        }
+        .print-header-info p {
+            font-size: 0.9rem;
+            margin: 0;
+            white-space: pre-wrap;
+        }
+        .overflow-x-auto {
+          overflow-x: visible !important;
+        }
         table {
           width: 100%;
           border-collapse: collapse;
-          font-size: 10pt;
+          font-size: 9pt;
         }
         th, td {
           border: 1px solid #ccc;
-          padding: 8px;
+          padding: 6px;
           text-align: right;
         }
         thead {
           background-color: #f2f2f2;
+          color: black;
+          display: table-header-group; /* Ensure header repeats on each page */
         }
         .bg-white.dark\:bg-gray-800.rounded-lg.shadow.p-6 {
           box-shadow: none !important;
           padding: 0 !important;
           border: none !important;
           border-radius: 0 !important;
+          background-color: transparent !important;
         }
         tr {
           page-break-inside: avoid;
@@ -66,6 +103,8 @@
            border-radius: 9999px;
            font-weight: 500;
            border: 1px solid #ddd;
+           background-color: transparent !important; /* Remove background for printing */
+           color: black !important; /* Ensure text is visible */
         }
       }
     </style>
