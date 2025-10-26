@@ -65,33 +65,61 @@ export const ItemModal: React.FC<ItemModalProps> = ({ item, onSave, onClose, uni
 
     if (isPrintMode) {
         return (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-                <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-8" onClick={(e) => e.stopPropagation()}>
-                    <h2 className="text-xl font-bold text-center mb-6">بيانات الصنف: {item.barcode}</h2>
-                    <div className="space-y-3 text-sm">
-                        <div className="flex justify-between"><strong>الباركود:</strong> <span className="font-mono">{item.barcode}</span></div>
-                        <div className="flex justify-between"><strong>اسم العميل:</strong> <span>{item.customerName}</span></div>
-                        <div className="flex justify-between"><strong>تاريخ الاستلام:</strong> <span>{new Date(item.receivedAt).toLocaleString('ar-EG')}</span></div>
-                        <div className="border-t my-2"></div>
-                        <div>
-                            <p><strong>المواصفات:</strong></p>
-                            <p className="p-2 bg-gray-50 rounded whitespace-pre-wrap">{item.specs}</p>
+            <div className="fixed inset-0 bg-white z-50 p-4 print:absolute print:bg-transparent" onClick={onClose}>
+                <div className="bg-white w-full max-w-2xl mx-auto p-8 print:shadow-none print:p-0" onClick={(e) => e.stopPropagation()}>
+                    {/* Company Header */}
+                    <div className="print-header flex justify-between items-start border-b-2 border-black pb-4 mb-4">
+                        <div className="print-header-info text-right">
+                            <h1 className="text-2xl font-bold text-primary-700 m-0">{appName}</h1>
+                            <p className="text-sm whitespace-pre-wrap m-0">{companyInfo}</p>
                         </div>
+                        {appLogo && <img src={appLogo} alt="Company Logo" className="max-h-20 w-auto" />}
+                    </div>
+
+                    {/* Report Title */}
+                    <div className="text-center mb-6 pb-4">
+                        <h2 className="text-xl font-bold">إيصال استلام صنف</h2>
+                        <p className="text-sm text-gray-500 mt-1">تاريخ الطباعة: {new Date().toLocaleString('ar-EG', { dateStyle: 'full', timeStyle: 'short' })}</p>
+                    </div>
+
+                    {/* Item Details */}
+                    <h3 className="text-lg font-semibold mb-4 border-b pb-2">بيانات الصنف</h3>
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-4 text-base">
+                        <div className="col-span-2 flex justify-between"><strong>الباركود:</strong> <span className="font-mono">{item.barcode}</span></div>
+                        <div className="col-span-2 flex justify-between"><strong>اسم العميل:</strong> <span>{item.customerName}</span></div>
+                        <div className="col-span-2 flex justify-between"><strong>تاريخ الاستلام:</strong> <span>{new Date(item.receivedAt).toLocaleString('ar-EG')}</span></div>
+                        
+                        <div className="col-span-2 mt-2">
+                            <p><strong>المواصفات:</strong></p>
+                            <p className="mt-1 p-2 bg-gray-50 rounded whitespace-pre-wrap border min-h-[40px]">{item.specs || 'لا يوجد'}</p>
+                        </div>
+                        
                         {item.notes && (
-                             <div>
+                            <div className="col-span-2">
                                 <p><strong>ملاحظات:</strong></p>
-                                <p className="p-2 bg-gray-50 rounded">{item.notes}</p>
+                                <p className="mt-1 p-2 bg-gray-50 rounded border min-h-[40px]">{item.notes}</p>
                             </div>
                         )}
-                        <div className="border-t my-2"></div>
+                        
+                        <div className="col-span-2 border-t my-2"></div>
+                        
                         <div className="flex justify-between"><strong>الكمية:</strong> <span>{item.quantity}</span></div>
+                        <div className="flex justify-between"><strong>سعر الوحدة:</strong> <span>{item.unitPrice.toFixed(2)}</span></div>
                         <div className="flex justify-between"><strong>الإجمالي:</strong> <span className="font-bold">{item.totalPrice.toFixed(2)}</span></div>
-                         <div className="flex justify-between"><strong>الحالة:</strong> <span>{STATUS_CONFIG[item.status].label}</span></div>
+                        <div className="flex justify-between"><strong>الحالة:</strong> <span>{STATUS_CONFIG[item.status].label}</span></div>
+
+                        {item.deliveryDate && <div className="col-span-2 flex justify-between mt-2"><strong>تاريخ التسليم:</strong> <span>{new Date(item.deliveryDate).toLocaleDateString('ar-EG')}</span></div>}
+                    </div>
+
+                    {/* Footer/Signature */}
+                    <div className="mt-20 pt-8 border-t text-center text-sm text-gray-600">
+                        <p>التوقيع: _________________________</p>
                     </div>
                 </div>
             </div>
         );
     }
+
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
