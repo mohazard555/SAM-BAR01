@@ -294,6 +294,13 @@ const App: React.FC = () => {
         window.print();
     };
 
+    const getPrintTitle = () => {
+        if (filters.status && STATUS_CONFIG[filters.status as ItemStatus]) {
+            return `تقرير حركة الأصناف - ${STATUS_CONFIG[filters.status as ItemStatus].label}`;
+        }
+        return 'تقرير حركة الأصناف';
+    };
+
     const undeliveredItems = items.filter(item => item.status !== ItemStatus.Delivered);
 
     return (
@@ -315,7 +322,7 @@ const App: React.FC = () => {
                     </div>
                     {appLogo && <img src={appLogo} alt="Company Logo" />}
                 </div>
-                <h2 className="text-xl font-bold text-center my-4">تقرير حركة الأصناف</h2>
+                <h2 className="text-xl font-bold text-center my-4">{getPrintTitle()}</h2>
                 <div className="flex justify-between text-sm mt-2 mb-4">
                     <p><strong>اسم المدير:</strong> {managerName}</p>
                     <p><strong>تاريخ الطباعة:</strong> {new Date().toLocaleDateString('ar-EG')}</p>
