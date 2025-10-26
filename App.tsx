@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Item, ItemStatus } from './types';
 import { INITIAL_ITEMS, STATUS_CONFIG } from './constants';
 import { Header } from './components/Header';
@@ -27,6 +27,8 @@ const App: React.FC = () => {
     const [isAdmin, setIsAdmin] = useState(false);
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+    const [isPreviewMode, setIsPreviewMode] = useState(false);
+    const [isPrintMode, setIsPrintMode] = useState(false);
 
     // Admin Credentials State
     const [adminUsername, setAdminUsername] = useState('admin');
@@ -74,7 +76,7 @@ const App: React.FC = () => {
         if (filters.status) {
             tempItems = tempItems.filter(item => item.status === filters.status);
         }
-        if (filters.customer) {
+        if (filters.customer !== '') {
             tempItems = tempItems.filter(item => item.customerName === filters.customer);
         }
         if (filters.dateFrom) {
@@ -120,8 +122,7 @@ const App: React.FC = () => {
         } else {
             setItems([itemToSave, ...items]);
         }
-        setIsModalOpen(false);
-        setEditingItem(null);
+        handleCloseModal();
 
         // Flash highlight
         setTimeout(() => setLastScannedBarcode(null), 2000);
@@ -130,12 +131,26 @@ const App: React.FC = () => {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setEditingItem(null);
+        setIsPreviewMode(false);
+        setIsPrintMode(false);
     };
 
     const handleDeleteItem = (itemId: number) => {
         if (window.confirm('هل أنت متأكد من رغبتك في حذف هذا الصنف؟ لا يمكن التراجع عن هذا الإجراء.')) {
             setItems(prevItems => prevItems.filter(item => item.id !== itemId));
         }
+    };
+    
+    const handlePreviewItem = (item: Item) => {
+        setEditingItem(item);
+        setIsPreviewMode(true);
+        setIsModalOpen(true);
+    };
+
+    const handlePrintItem = (item: Item) => {
+        setEditingItem(item);
+        setIsPrintMode(true);
+        setIsModalOpen(true);
     };
 
     const handleLogin = (username: string, password: string) => {
@@ -302,6 +317,11 @@ const App: React.FC = () => {
     };
 
     const undeliveredItems = items.filter(item => item.status !== ItemStatus.Delivered);
+    
+    const uniqueCustomers = useMemo(() => {
+        const customerNames = items.map(item => item.customerName.trim()).filter(Boolean);
+        return [...new Set(customerNames)].sort();
+    }, [items]);
 
     return (
         <div className="min-h-screen text-gray-800 dark:text-gray-200 flex flex-col">
@@ -374,7 +394,10 @@ const App: React.FC = () => {
                                 items={filteredItems} 
                                 onEditItem={(item) => { setEditingItem(item); setIsModalOpen(true); }} 
                                 onDeleteItem={handleDeleteItem}
-                                lastScannedBarcode={lastScannedBarcode} 
+                                onPreviewItem={handlePreviewItem}
+                                onPrintItem={handlePrintItem}
+                                lastScannedBarcode={lastScannedBarcode}
+                                isAdmin={isAdmin}
                                />
                             </div>
                         </div>
@@ -385,7 +408,17 @@ const App: React.FC = () => {
             <Footer />
 
             {isModalOpen && editingItem && (
-                <ItemModal item={editingItem} onSave={handleSaveItem} onClose={handleCloseModal} />
+                <ItemModal 
+                    item={editingItem} 
+                    onSave={handleSaveItem} 
+                    onClose={handleCloseModal}
+                    uniqueCustomers={uniqueCustomers}
+                    isPreview={isPreviewMode}
+                    isPrintMode={isPrintMode}
+                    appName={appName}
+                    appLogo={appLogo}
+                    companyInfo={companyInfo}
+                />
             )}
 
             {isLoginModalOpen && (

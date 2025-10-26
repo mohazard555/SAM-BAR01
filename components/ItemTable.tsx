@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
 import { Item, ItemStatus } from '../types';
 import { STATUS_CONFIG } from '../constants';
-import { EditIcon, SortAscIcon, SortDescIcon, DeleteIcon } from './Icons';
+import { EditIcon, SortAscIcon, SortDescIcon, DeleteIcon, PreviewIcon, PrintIcon } from './Icons';
 
 interface ItemTableProps {
     items: Item[];
     onEditItem: (item: Item) => void;
     onDeleteItem: (itemId: number) => void;
+    onPreviewItem: (item: Item) => void;
+    onPrintItem: (item: Item) => void;
     lastScannedBarcode: string | null;
+    isAdmin: boolean;
 }
 
 type SortKey = keyof Item;
 
-export const ItemTable: React.FC<ItemTableProps> = ({ items, onEditItem, onDeleteItem, lastScannedBarcode }) => {
+export const ItemTable: React.FC<ItemTableProps> = ({ items, onEditItem, onDeleteItem, onPreviewItem, onPrintItem, lastScannedBarcode, isAdmin }) => {
     const [sortKey, setSortKey] = useState<SortKey>('receivedAt');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
@@ -48,8 +51,9 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, onEditItem, onDelet
     const headers: { key: SortKey; label: string; className?: string }[] = [
         { key: 'receivedAt', label: 'تاريخ الاستلام', className: 'w-1/12' },
         { key: 'barcode', label: 'الباركود', className: 'w-1/12' },
-        { key: 'customerName', label: 'العميل', className: 'w-2/12' },
-        { key: 'specs', label: 'المواصفات', className: 'w-3/12' },
+        { key: 'customerName', label: 'العميل', className: 'w-1/12' },
+        { key: 'specs', label: 'المواصفات', className: 'w-2/12' },
+        { key: 'notes', label: 'ملاحظات', className: 'w-2/12' },
         { key: 'quantity', label: 'الكمية', className: 'w-1/12' },
         { key: 'totalPrice', label: 'الإجمالي', className: 'w-1/12' },
         { key: 'deliveryDate', label: 'تاريخ التسليم', className: 'w-1/12' },
@@ -69,9 +73,11 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, onEditItem, onDelet
                                 </div>
                             </th>
                         ))}
-                        <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider print-hide">
-                           إجراءات
-                        </th>
+                        {isAdmin && (
+                            <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider print-hide">
+                               إجراءات
+                            </th>
+                        )}
                     </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -85,6 +91,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, onEditItem, onDelet
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-700 dark:text-gray-300 text-right">{item.barcode}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-right">{item.customerName}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs text-right print-full-text">{item.specs}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs text-right print-full-text">{item.notes}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-right">{item.quantity}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-right">{item.totalPrice.toFixed(2)}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-right">{item.deliveryDate ? new Date(item.deliveryDate).toLocaleDateString('ar-EG') : 'غير محدد'}</td>
@@ -93,16 +100,24 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, onEditItem, onDelet
                                         {config.label}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium print-hide">
-                                    <div className="flex items-center justify-center gap-4">
-                                        <button onClick={() => onEditItem(item)} className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-200" title="تعديل">
-                                            <EditIcon />
-                                        </button>
-                                        <button onClick={() => onDeleteItem(item.id)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200" title="حذف">
-                                            <DeleteIcon />
-                                        </button>
-                                    </div>
-                                </td>
+                                {isAdmin && (
+                                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium print-hide">
+                                        <div className="flex items-center justify-center gap-4">
+                                            <button onClick={() => onPreviewItem(item)} className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200" title="معاينة">
+                                                <PreviewIcon />
+                                            </button>
+                                             <button onClick={() => onPrintItem(item)} className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200" title="طباعة">
+                                                <PrintIcon />
+                                            </button>
+                                            <button onClick={() => onEditItem(item)} className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-200" title="تعديل">
+                                                <EditIcon />
+                                            </button>
+                                            <button onClick={() => onDeleteItem(item.id)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-200" title="حذف">
+                                                <DeleteIcon />
+                                            </button>
+                                        </div>
+                                    </td>
+                                )}
                             </tr>
                         );
                     })}
