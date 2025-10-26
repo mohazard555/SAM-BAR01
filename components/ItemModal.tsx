@@ -67,14 +67,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({ item, onSave, onClose, uni
         return (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
                 <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-8" onClick={(e) => e.stopPropagation()}>
-                    <div className="print-header flex justify-between items-start pb-4 mb-4 border-b">
-                        <div className="text-right">
-                            <h1 className="text-2xl font-bold text-primary-700">{appName}</h1>
-                            <p className="text-xs whitespace-pre-wrap">{companyInfo}</p>
-                        </div>
-                        {appLogo && <img src={appLogo} alt="Logo" className="max-h-16"/>}
-                    </div>
-                    <h2 className="text-xl font-bold text-center mb-6">إيصال استلام</h2>
+                    <h2 className="text-xl font-bold text-center mb-6">بيانات الصنف: {item.barcode}</h2>
                     <div className="space-y-3 text-sm">
                         <div className="flex justify-between"><strong>الباركود:</strong> <span className="font-mono">{item.barcode}</span></div>
                         <div className="flex justify-between"><strong>اسم العميل:</strong> <span>{item.customerName}</span></div>
@@ -94,9 +87,6 @@ export const ItemModal: React.FC<ItemModalProps> = ({ item, onSave, onClose, uni
                         <div className="flex justify-between"><strong>الكمية:</strong> <span>{item.quantity}</span></div>
                         <div className="flex justify-between"><strong>الإجمالي:</strong> <span className="font-bold">{item.totalPrice.toFixed(2)}</span></div>
                          <div className="flex justify-between"><strong>الحالة:</strong> <span>{STATUS_CONFIG[item.status].label}</span></div>
-                    </div>
-                     <div className="mt-8 text-center text-xs text-gray-500">
-                        <p>تاريخ الطباعة: {new Date().toLocaleString('ar-EG')}</p>
                     </div>
                 </div>
             </div>
