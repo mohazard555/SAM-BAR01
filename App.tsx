@@ -357,55 +357,55 @@ const App: React.FC = () => {
                             {filters.dateTo && <li>- إلى تاريخ: {new Date(filters.dateTo).toLocaleDateString('ar-EG')}</li>}
                         </ul>
                     </div>
-                )}
+                 )}
             </div>
 
-            <main className="flex-grow p-4 sm:p-6 lg:p-8 print-hide">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    {/* Right Panel */}
-                    <div className="lg:col-span-3">
-                        <div className="space-y-6">
-                           <FilterPanel items={items} filters={filters} onFilterChange={setFilters} onClearFilters={() => setFilters({ status: '', customer: '', dateFrom: '', dateTo: '' })} />
-                           <AlertsPanel undeliveredItems={undeliveredItems} onAlertClick={(barcode) => handleScan(barcode)} />
-                           <CompanyInfoPanel info={companyInfo} />
+            <main className="container mx-auto p-4 sm:p-6 lg:p-8 flex-grow">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 print-as-block">
+                    <div className="lg:col-span-3 order-2 lg:order-1 flex flex-col gap-6">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 print-hide">
+                           <BarcodeScanner onScan={handleScan} />
                         </div>
-                    </div>
+                        
+                        <div className="flex flex-wrap gap-2 print-hide">
+                             <input type="file" id="import-file" className="hidden" onChange={importFromXLSX} accept=".xlsx, .xls" />
+                             <label htmlFor="import-file" className="cursor-pointer flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600">
+                                <ImportIcon /> استيراد XLSX
+                             </label>
 
-                    {/* Center Panel */}
-                    <div className="lg:col-span-9">
+                            <button onClick={exportToXLSX} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600">
+                                <ExportIcon /> تصدير XLSX
+                            </button>
+                             <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700">
+                                <PrintIcon /> طباعة التقرير
+                            </button>
+                        </div>
+                        
                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                            <BarcodeScanner onScan={handleScan} />
-                            {isAdmin && (
-                                <div className="mt-4 flex flex-col sm:flex-row gap-2 flex-wrap">
-                                    <button onClick={exportToXLSX} className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
-                                        <ExportIcon /> تصدير إلى Excel
-                                    </button>
-                                    <label className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors cursor-pointer">
-                                        <ImportIcon /> استيراد من Excel
-                                        <input type="file" accept=".xlsx, .xls" onChange={importFromXLSX} className="hidden" />
-                                    </label>
-                                     <button onClick={handlePrint} className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors">
-                                        <PrintIcon /> طباعة التقرير
-                                    </button>
-                                </div>
-                            )}
-                            <div className="mt-6">
-                               <ItemTable 
-                                items={filteredItems} 
-                                onEditItem={(item) => { setEditingItem(item); setIsModalOpen(true); }} 
+                            <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white print-hide">قائمة الأصناف</h2>
+                            <ItemTable
+                                items={filteredItems}
+                                onEditItem={(item) => { setEditingItem(item); setIsModalOpen(true); }}
                                 onDeleteItem={handleDeleteItem}
                                 onPreviewItem={handlePreviewItem}
                                 onPrintItem={handlePrintItem}
                                 lastScannedBarcode={lastScannedBarcode}
                                 isAdmin={isAdmin}
-                               />
-                            </div>
+                            />
                         </div>
+                    </div>
+                    <div className="lg:col-span-1 order-1 lg:order-2 flex flex-col gap-6 print-hide">
+                         <FilterPanel
+                            items={items}
+                            filters={filters}
+                            onFilterChange={setFilters}
+                            onClearFilters={() => setFilters({ status: '', customer: '', dateFrom: '', dateTo: '' })}
+                        />
+                        <AlertsPanel undeliveredItems={undeliveredItems} onAlertClick={handleScan} />
+                        <CompanyInfoPanel info={companyInfo} />
                     </div>
                 </div>
             </main>
-            
-            <Footer />
 
             {isModalOpen && editingItem && (
                 <ItemModal 
@@ -420,27 +420,18 @@ const App: React.FC = () => {
                     companyInfo={companyInfo}
                 />
             )}
+            
+            {isLoginModalOpen && <LoginModal onLogin={handleLogin} onClose={() => setIsLoginModalOpen(false)} />}
+            
+            {isSettingsModalOpen && <SettingsModal 
+                onClose={() => setIsSettingsModalOpen(false)} 
+                onSave={handleSaveSettings}
+                currentSettings={{ appName, appLogo, managerName, companyInfo, adminUsername, adminPassword }}
+                onExportJSON={exportJSON}
+                onImportJSON={importJSON}
+            />}
 
-            {isLoginModalOpen && (
-                <LoginModal onLogin={handleLogin} onClose={() => setIsLoginModalOpen(false)} />
-            )}
-
-            {isAdmin && isSettingsModalOpen && (
-                <SettingsModal 
-                    onClose={() => setIsSettingsModalOpen(false)}
-                    onSave={handleSaveSettings}
-                    currentSettings={{
-                        appName: appName,
-                        appLogo: appLogo,
-                        managerName: managerName,
-                        companyInfo: companyInfo,
-                        adminUsername: adminUsername,
-                        adminPassword: adminPassword,
-                    }}
-                    onExportJSON={exportJSON}
-                    onImportJSON={importJSON}
-                />
-            )}
+            <Footer />
         </div>
     );
 };
