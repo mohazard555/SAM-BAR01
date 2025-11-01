@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Item, ItemStatus } from './types';
 import { INITIAL_ITEMS, STATUS_CONFIG } from './constants';
@@ -236,25 +237,39 @@ const App: React.FC = () => {
                 Object.entries(STATUS_CONFIG).map(([key, val]) => [val.label, key])
             );
 
+            // Helper function to handle dates from Excel correctly, avoiding timezone issues.
+            const handleExcelDate = (date: any): string | null => {
+                if (date instanceof Date && !isNaN(date.getTime())) {
+                    // The date from XLSX is parsed based on the local timezone.
+                    // toISOString() converts to UTC, which can shift the date by a day.
+                    // To prevent this, we construct a new UTC date from the local date's components.
+                    const year = date.getFullYear();
+                    const month = date.getMonth();
+                    const day = date.getDate();
+                    // Using noon UTC is a robust way to avoid timezone-related edge cases.
+                    return new Date(Date.UTC(year, month, day, 12, 0, 0)).toISOString();
+                }
+                return null;
+            };
+
             const newItems: Item[] = json.map(row => {
                  const statusKey = statusReverseMap[row['الحالة']] as ItemStatus | undefined;
-                 const receivedDate = row['تاريخ الاستلام'];
-                 const deliveryDate = row['تاريخ التسليم'];
 
                 return {
                     id: row['المعرف'] || Date.now() + Math.random(),
                     barcode: row['الباركود'],
-                    receivedAt: receivedDate instanceof Date ? receivedDate.toISOString() : new Date().toISOString(),
+                    receivedAt: handleExcelDate(row['تاريخ الاستلام']) || new Date().toISOString(),
                     customerName: row['اسم العميل'] || '',
                     specs: row['المواصفات'] || '',
                     quantity: Number(row['الكمية']) || 0,
                     unitPrice: Number(row['سعر الوحدة']) || 0,
                     totalPrice: Number(row['السعر الإجمالي']) || 0,
                     notes: row['ملاحظات'] || '',
-                    deliveryDate: deliveryDate instanceof Date ? deliveryDate.toISOString() : null,
+                    deliveryDate: handleExcelDate(row['تاريخ التسليم']),
                     status: statusKey || ItemStatus.New,
                 };
             }).filter(item => item && item.barcode);
+
 
             if (newItems.length > 0) {
                 if (window.confirm(`سيؤدي هذا إلى استبدال جميع البيانات الحالية بـ ${newItems.length} صنفًا من الملف. هل تريد المتابعة؟`)) {
