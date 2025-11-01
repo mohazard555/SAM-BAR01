@@ -227,7 +227,7 @@ const App: React.FC = () => {
         const reader = new FileReader();
         reader.onload = (e) => {
             const data = e.target?.result;
-            const workbook = XLSX.read(data, { type: 'binary' });
+            const workbook = XLSX.read(data, { type: 'binary', cellDates: true });
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
             const json = XLSX.utils.sheet_to_json(worksheet) as any[];
@@ -238,32 +238,32 @@ const App: React.FC = () => {
 
             const newItems: Item[] = json.map(row => {
                  const statusKey = statusReverseMap[row['الحالة']] as ItemStatus | undefined;
+                 const receivedDate = row['تاريخ الاستلام'];
+                 const deliveryDate = row['تاريخ التسليم'];
+
                 return {
                     id: row['المعرف'] || Date.now() + Math.random(),
                     barcode: row['الباركود'],
-                    receivedAt: row['تاريخ الاستلام'] ? new Date(row['تاريخ الاستلام']).toISOString() : new Date().toISOString(),
-                    customerName: row['اسم العميل'],
-                    specs: row['المواصفات'],
+                    receivedAt: receivedDate instanceof Date ? receivedDate.toISOString() : new Date().toISOString(),
+                    customerName: row['اسم العميل'] || '',
+                    specs: row['المواصفات'] || '',
                     quantity: Number(row['الكمية']) || 0,
                     unitPrice: Number(row['سعر الوحدة']) || 0,
                     totalPrice: Number(row['السعر الإجمالي']) || 0,
                     notes: row['ملاحظات'] || '',
-                    deliveryDate: row['تاريخ التسليم'] ? new Date(row['تاريخ التسليم']).toISOString() : null,
+                    deliveryDate: deliveryDate instanceof Date ? deliveryDate.toISOString() : null,
                     status: statusKey || ItemStatus.New,
                 };
             }).filter(item => item && item.barcode);
 
-            const updatedItems = [...items];
-            newItems.forEach(newItem => {
-                const existingIndex = updatedItems.findIndex(i => i.barcode === newItem.barcode);
-                if (existingIndex > -1) {
-                    updatedItems[existingIndex] = { ...updatedItems[existingIndex], ...newItem, id: updatedItems[existingIndex].id };
-                } else {
-                    updatedItems.unshift(newItem);
+            if (newItems.length > 0) {
+                if (window.confirm(`سيؤدي هذا إلى استبدال جميع البيانات الحالية بـ ${newItems.length} صنفًا من الملف. هل تريد المتابعة؟`)) {
+                    setItems(newItems);
+                    alert(`تم استيراد ${newItems.length} صنف بنجاح.`);
                 }
-            });
-            setItems(updatedItems);
-            alert(`تم استيراد ${newItems.length} صنف بنجاح.`);
+            } else {
+                alert("لم يتم العثور على أصناف صالحة في الملف.");
+            }
         };
         reader.readAsBinaryString(file);
         event.target.value = '';
