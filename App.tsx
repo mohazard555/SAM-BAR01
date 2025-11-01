@@ -95,13 +95,21 @@ const App: React.FC = () => {
 
     const handleScan = (barcode: string) => {
         const existingItem = items.find(item => item.barcode === barcode);
+
+        // Timezone-safe "today"
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = today.getMonth();
+        const day = today.getDate();
+        const todayUTCNoon = new Date(Date.UTC(year, month, day, 12, 0, 0)).toISOString();
+
         if (existingItem) {
             setEditingItem(existingItem);
         } else {
             setEditingItem({
                 id: Date.now(),
                 barcode: barcode,
-                receivedAt: new Date().toISOString(),
+                receivedAt: todayUTCNoon,
                 customerName: '',
                 specs: '',
                 quantity: 1,
@@ -204,14 +212,14 @@ const App: React.FC = () => {
         const dataToExport = filteredItems.map(item => ({
             'المعرف': item.id,
             'الباركود': item.barcode,
-            'تاريخ الاستلام': new Date(item.receivedAt).toLocaleDateString('ar-EG'),
+            'تاريخ الاستلام': new Date(item.receivedAt),
             'اسم العميل': item.customerName,
             'المواصفات': item.specs,
             'الكمية': item.quantity,
             'سعر الوحدة': item.unitPrice,
             'السعر الإجمالي': item.totalPrice,
             'ملاحظات': item.notes,
-            'تاريخ التسليم': item.deliveryDate ? new Date(item.deliveryDate).toLocaleDateString('ar-EG') : '',
+            'تاريخ التسليم': item.deliveryDate ? new Date(item.deliveryDate) : null,
             'الحالة': STATUS_CONFIG[item.status].label,
         }));
 
@@ -240,17 +248,20 @@ const App: React.FC = () => {
             // Helper function to handle dates from Excel correctly, avoiding timezone issues.
             const handleExcelDate = (date: any): string | null => {
                 if (date instanceof Date && !isNaN(date.getTime())) {
-                    // The date from XLSX is parsed based on the local timezone.
-                    // toISOString() converts to UTC, which can shift the date by a day.
-                    // To prevent this, we construct a new UTC date from the local date's components.
                     const year = date.getFullYear();
                     const month = date.getMonth();
                     const day = date.getDate();
-                    // Using noon UTC is a robust way to avoid timezone-related edge cases.
                     return new Date(Date.UTC(year, month, day, 12, 0, 0)).toISOString();
                 }
                 return null;
             };
+            
+            // Timezone-safe "today" for fallback
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth();
+            const day = today.getDate();
+            const todayUTCNoon = new Date(Date.UTC(year, month, day, 12, 0, 0)).toISOString();
 
             const newItems: Item[] = json.map(row => {
                  const statusKey = statusReverseMap[row['الحالة']] as ItemStatus | undefined;
@@ -258,7 +269,7 @@ const App: React.FC = () => {
                 return {
                     id: row['المعرف'] || Date.now() + Math.random(),
                     barcode: row['الباركود'],
-                    receivedAt: handleExcelDate(row['تاريخ الاستلام']) || new Date().toISOString(),
+                    receivedAt: handleExcelDate(row['تاريخ الاستلام']) || todayUTCNoon,
                     customerName: row['اسم العميل'] || '',
                     specs: row['المواصفات'] || '',
                     quantity: Number(row['الكمية']) || 0,

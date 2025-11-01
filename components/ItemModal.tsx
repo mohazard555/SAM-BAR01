@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Item, ItemStatus } from '../types';
 import { STATUS_CONFIG } from '../constants';
@@ -42,11 +43,22 @@ export const ItemModal: React.FC<ItemModalProps> = ({ item, onSave, onClose, uni
     };
 
     const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value ? new Date(value).toISOString() : null
-        }));
+        const { name, value } = e.target; // value is "YYYY-MM-DD"
+        if (value) {
+            // To avoid timezone issues, parse the date string manually and create a UTC date.
+            const [year, month, day] = value.split('-').map(Number);
+            // Date.UTC month is 0-indexed.
+            const utcDate = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+            setFormData(prev => ({
+                ...prev,
+                [name]: utcDate.toISOString()
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: null
+            }));
+        }
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -56,7 +68,13 @@ export const ItemModal: React.FC<ItemModalProps> = ({ item, onSave, onClose, uni
     
     const formatDateForInput = (dateString: string | null) => {
         if (!dateString) return '';
-        return dateString.split('T')[0];
+        // Create a date object from the UTC ISO string
+        const date = new Date(dateString);
+        // Extract year, month, and day in UTC to avoid timezone shifts
+        const year = date.getUTCFullYear();
+        const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+        const day = date.getUTCDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
     
     const inputClasses = "mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 py-2.5 px-3";
