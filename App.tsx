@@ -1,5 +1,10 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Toaster, toast } from 'sonner';
+import { 
+    PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip as RechartsTooltip,
+    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip
+} from 'recharts';
 import { Item, ItemStatus } from './types';
 import { INITIAL_ITEMS, STATUS_CONFIG } from './constants';
 import { Header } from './components/Header';
@@ -22,6 +27,7 @@ const App: React.FC = () => {
         return savedItems ? JSON.parse(savedItems) : INITIAL_ITEMS;
     });
     const [filteredItems, setFilteredItems] = useState<Item[]>(items);
+    const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<Item | null>(null);
     const [lastScannedBarcode, setLastScannedBarcode] = useState<string | null>(null);
@@ -143,6 +149,17 @@ const App: React.FC = () => {
 
     const applyFilters = useCallback(() => {
         let tempItems = [...items];
+        
+        // Search filter
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase();
+            tempItems = tempItems.filter(item => 
+                item.barcode.toLowerCase().includes(query) ||
+                item.customerName.toLowerCase().includes(query) ||
+                item.specs.toLowerCase().includes(query)
+            );
+        }
+
         if (filters.status) {
             tempItems = tempItems.filter(item => item.status === filters.status);
         }
@@ -156,11 +173,34 @@ const App: React.FC = () => {
             tempItems = tempItems.filter(item => new Date(item.receivedAt).setHours(0,0,0,0) <= new Date(filters.dateTo).setHours(0,0,0,0));
         }
         setFilteredItems(tempItems);
-    }, [items, filters]);
+    }, [items, filters, searchQuery]);
 
     useEffect(() => {
         applyFilters();
-    }, [items, filters, applyFilters]);
+    }, [items, filters, searchQuery, applyFilters]);
+
+    // Check for delivery dates
+    useEffect(() => {
+        const checkDeliveries = () => {
+            const today = new Date().toISOString().split('T')[0];
+            items.forEach(item => {
+                if (item.deliveryDate && item.status !== ItemStatus.Delivered) {
+                    const delivery = new Date(item.deliveryDate).toISOString().split('T')[0];
+                    if (delivery === today) {
+                        toast.warning(`تنبيه: الصنف ${item.barcode} موعد تسليمه اليوم!`, {
+                            description: `العميل: ${item.customerName}`,
+                            duration: 10000,
+                        });
+                    }
+                }
+            });
+        };
+
+        checkDeliveries();
+        // Check every hour
+        const interval = setInterval(checkDeliveries, 3600000);
+        return () => clearInterval(interval);
+    }, [items]);
 
     const handleScan = (barcode: string) => {
         const existingItem = items.find(item => item.barcode === barcode);
@@ -197,9 +237,21 @@ const App: React.FC = () => {
     const handleSaveItem = (itemToSave: Item) => {
         const index = items.findIndex(i => i.id === itemToSave.id);
         if (index > -1) {
+            const oldItem = items[index];
             setItems(items.map(i => i.id === itemToSave.id ? itemToSave : i));
+            
+            if (oldItem.status !== itemToSave.status) {
+                toast.info(`تم تغيير حالة الصنف ${itemToSave.barcode}`, {
+                    description: `من ${STATUS_CONFIG[oldItem.status].label} إلى ${STATUS_CONFIG[itemToSave.status].label}`
+                });
+            } else {
+                toast.success(`تم تحديث بيانات الصنف ${itemToSave.barcode}`);
+            }
         } else {
             setItems([itemToSave, ...items]);
+            toast.success(`تم إضافة صنف جديد: ${itemToSave.barcode}`, {
+                description: `العميل: ${itemToSave.customerName}`
+            });
         }
         handleCloseModal();
 
@@ -305,7 +357,8 @@ const App: React.FC = () => {
         const worksheet = XLSX.utils.json_to_sheet(dataToExport);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "الأصناف");
-        XLSX.writeFile(workbook, "تصدير_المخزون.xlsx");
+        const fileName = `تصدير_المخزون_${new Date().toISOString().split('T')[0]}.xlsx`;
+        XLSX.writeFile(workbook, fileName);
     };
 
     const importFromXLSX = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -428,8 +481,29 @@ const App: React.FC = () => {
         return [...new Set(customerNames)].sort();
     }, [items]);
 
+    const chartData = useMemo(() => {
+        const counts = items.reduce((acc, item) => {
+            acc[item.status] = (acc[item.status] || 0) + 1;
+            return acc;
+        }, {} as Record<string, number>);
+
+        return Object.values(ItemStatus).map(status => ({
+            status,
+            name: STATUS_CONFIG[status].label,
+            value: counts[status] || 0,
+        }));
+    }, [items]);
+
+    const CHART_COLORS: Record<string, string> = {
+        [ItemStatus.New]: '#3b82f6',
+        [ItemStatus.InProgress]: '#f59e0b',
+        [ItemStatus.Delivered]: '#10b981',
+        [ItemStatus.Cancelled]: '#ef4444',
+    };
+
     return (
         <div className="min-h-screen text-gray-800 dark:text-gray-200 flex flex-col">
+            <Toaster position="top-center" richColors />
             <Header 
                 appName={appName}
                 appLogo={appLogo}
@@ -466,10 +540,55 @@ const App: React.FC = () => {
             </div>
 
             <main className="container mx-auto p-2 sm:p-4 lg:p-6 flex-grow max-w-[1600px]">
+                <FilterPanel
+                    items={items}
+                    filters={filters}
+                    searchQuery={searchQuery}
+                    onFilterChange={setFilters}
+                    onSearchChange={setSearchQuery}
+                    onClearFilters={() => {
+                        setFilters({ status: '', customer: '', dateFrom: '', dateTo: '' });
+                        setSearchQuery('');
+                    }}
+                />
+
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 print-as-block">
-                    <div className="lg:col-span-10 order-2 lg:order-1 flex flex-col gap-4">
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 print-hide">
-                           <BarcodeScanner onScan={handleScan} />
+                    <div className="lg:col-span-9 order-2 lg:order-1 flex flex-col gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print-hide">
+                            <div className="md:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                                <BarcodeScanner onScan={handleScan} />
+                            </div>
+                            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex flex-col justify-center items-center">
+                                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">إحصائيات الحالات</h3>
+                                <div className="h-40 w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={chartData}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={40}
+                                                outerRadius={60}
+                                                paddingAngle={5}
+                                                dataKey="value"
+                                            >
+                                                {chartData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={CHART_COLORS[entry.status]} />
+                                                ))}
+                                            </Pie>
+                                            <RechartsTooltip />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-2">
+                                    {chartData.map((entry, index) => (
+                                        <div key={index} className="flex items-center gap-1 text-[10px]">
+                                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: CHART_COLORS[entry.status] }}></div>
+                                            <span>{entry.name}: {entry.value}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                         
                         <div className="flex flex-wrap gap-2 print-hide">
@@ -500,13 +619,7 @@ const App: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                    <div className="lg:col-span-2 order-1 lg:order-2 flex flex-col gap-4 print-hide">
-                         <FilterPanel
-                            items={items}
-                            filters={filters}
-                            onFilterChange={setFilters}
-                            onClearFilters={() => setFilters({ status: '', customer: '', dateFrom: '', dateTo: '' })}
-                        />
+                    <div className="lg:col-span-3 order-1 lg:order-2 flex flex-col gap-4 print-hide">
                         <AlertsPanel undeliveredItems={undeliveredItems} onAlertClick={handleScan} />
                         <CompanyInfoPanel info={companyInfo} />
                     </div>
