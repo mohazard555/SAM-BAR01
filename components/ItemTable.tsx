@@ -55,6 +55,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, onEditItem, onDelet
         { key: 'specs', label: 'المواصفات', className: 'w-2/12' },
         { key: 'notes', label: 'ملاحظات', className: 'w-2/12' },
         { key: 'quantity', label: 'الكمية', className: 'w-1/12' },
+        { key: 'unitPrice', label: 'السعر', className: 'w-1/12' },
         { key: 'totalPrice', label: 'الإجمالي', className: 'w-1/12' },
         { key: 'deliveryDate', label: 'تاريخ التسليم', className: 'w-1/12' },
         { key: 'status', label: 'الحالة', className: 'w-1/12 text-center' },
@@ -93,6 +94,7 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, onEditItem, onDelet
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs text-right print-full-text">{item.specs}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs text-right print-full-text">{item.notes}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-right">{item.quantity}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-right">{item.unitPrice.toFixed(2)}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-right">{item.totalPrice.toFixed(2)}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 text-right">{item.deliveryDate ? new Date(item.deliveryDate).toLocaleDateString('ar-EG') : 'غير محدد'}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-center">
