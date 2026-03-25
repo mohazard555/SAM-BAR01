@@ -17,6 +17,7 @@ interface SettingsModalProps {
     currentSettings: Settings;
     onExportJSON: () => void;
     onImportJSON: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    onResetData: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -25,6 +26,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     currentSettings,
     onExportJSON,
     onImportJSON,
+    onResetData,
 }) => {
     const [settings, setSettings] = useState<Settings>(currentSettings);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -163,6 +165,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                     <input type="file" accept=".json" onChange={onImportJSON} className="hidden" />
                                 </label>
                              </div>
+                        </div>
+
+                        <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                             <h4 className="text-md font-medium text-red-600 dark:text-red-400 mb-2">منطقة الخطر</h4>
+                             <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                                تصفير جميع البيانات سيؤدي إلى حذف كافة الأصناف المسجلة في النظام بشكل نهائي.
+                             </p>
+                             <button 
+                                type="button" 
+                                onClick={onResetData} 
+                                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm font-medium"
+                             >
+                                تصفير جميع البيانات
+                             </button>
                         </div>
 
                     </div>

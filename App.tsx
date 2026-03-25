@@ -29,7 +29,6 @@ const App: React.FC = () => {
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     const [isPreviewMode, setIsPreviewMode] = useState(false);
-    const [isPrintMode, setIsPrintMode] = useState(false);
     const [primaryColor, setPrimaryColor] = useState('#3b82f6');
 
     // Admin Credentials State
@@ -212,7 +211,6 @@ const App: React.FC = () => {
         setIsModalOpen(false);
         setEditingItem(null);
         setIsPreviewMode(false);
-        setIsPrintMode(false);
     };
 
     const handleDeleteItem = (itemId: number) => {
@@ -231,10 +229,12 @@ const App: React.FC = () => {
         setIsPreviewMode(false);
     };
 
-    const handlePrintItem = (item: Item) => {
-        setEditingItem(item);
-        setIsPrintMode(true);
-        setIsModalOpen(true);
+    const handleResetData = () => {
+        if (window.confirm('هل أنت متأكد من رغبتك في تصفير جميع البيانات؟ سيتم حذف جميع الأصناف المسجلة نهائياً.')) {
+            setItems([]);
+            localStorage.removeItem('inventoryItems');
+            alert('تم تصفير البيانات بنجاح.');
+        }
     };
 
     const handleLogin = (username: string, password: string) => {
@@ -494,7 +494,6 @@ const App: React.FC = () => {
                                     onEditItem={(item) => { setEditingItem(item); setIsModalOpen(true); }}
                                     onDeleteItem={handleDeleteItem}
                                     onPreviewItem={handlePreviewItem}
-                                    onPrintItem={handlePrintItem}
                                     lastScannedBarcode={lastScannedBarcode}
                                     isAdmin={isAdmin}
                                 />
@@ -521,7 +520,6 @@ const App: React.FC = () => {
                     onClose={handleCloseModal}
                     uniqueCustomers={uniqueCustomers}
                     isPreview={isPreviewMode}
-                    isPrintMode={isPrintMode}
                     appName={appName}
                     appLogo={appLogo}
                     companyInfo={companyInfo}
@@ -537,6 +535,7 @@ const App: React.FC = () => {
                 currentSettings={{ appName, appLogo, managerName, companyInfo, adminUsername, adminPassword, primaryColor }}
                 onExportJSON={exportJSON}
                 onImportJSON={importJSON}
+                onResetData={handleResetData}
             />}
 
             <Footer />

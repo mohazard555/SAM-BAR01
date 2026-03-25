@@ -1,21 +1,20 @@
 import React, { useState } from 'react';
 import { Item, ItemStatus } from '../types';
 import { STATUS_CONFIG } from '../constants';
-import { EditIcon, SortAscIcon, SortDescIcon, DeleteIcon, PreviewIcon, PrintIcon } from './Icons';
+import { EditIcon, SortAscIcon, SortDescIcon, DeleteIcon, PreviewIcon } from './Icons';
 
 interface ItemTableProps {
     items: Item[];
     onEditItem: (item: Item) => void;
     onDeleteItem: (itemId: number) => void;
     onPreviewItem: (item: Item) => void;
-    onPrintItem: (item: Item) => void;
     lastScannedBarcode: string | null;
     isAdmin: boolean;
 }
 
 type SortKey = keyof Item;
 
-export const ItemTable: React.FC<ItemTableProps> = ({ items, onEditItem, onDeleteItem, onPreviewItem, onPrintItem, lastScannedBarcode, isAdmin }) => {
+export const ItemTable: React.FC<ItemTableProps> = ({ items, onEditItem, onDeleteItem, onPreviewItem, lastScannedBarcode, isAdmin }) => {
     const [sortKey, setSortKey] = useState<SortKey>('receivedAt');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
@@ -107,9 +106,6 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, onEditItem, onDelet
                                         <div className="flex items-center justify-center gap-4">
                                             <button onClick={() => onPreviewItem(item)} className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200" title="معاينة">
                                                 <PreviewIcon />
-                                            </button>
-                                             <button onClick={() => onPrintItem(item)} className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200" title="طباعة">
-                                                <PrintIcon />
                                             </button>
                                             <button onClick={() => onEditItem(item)} className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-200" title="تعديل">
                                                 <EditIcon />
