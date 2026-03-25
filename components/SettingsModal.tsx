@@ -8,6 +8,7 @@ interface Settings {
     companyInfo: string;
     adminUsername: string;
     adminPassword: string;
+    primaryColor: string;
 }
 
 interface SettingsModalProps {
@@ -108,6 +109,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                     rows={3}
                                     className={inputClasses}
                                 ></textarea>
+                            </div>
+                            <div className='mt-4'>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">لون الموقع الأساسي</label>
+                                <div className="mt-1 flex items-center gap-3">
+                                    <input
+                                        type="color"
+                                        name="primaryColor"
+                                        value={settings.primaryColor}
+                                        onChange={handleInputChange}
+                                        className="h-10 w-20 border-gray-300 dark:border-gray-600 rounded-md cursor-pointer bg-white dark:bg-gray-700"
+                                    />
+                                    <span className="text-sm font-mono text-gray-600 dark:text-gray-400">{settings.primaryColor}</span>
+                                </div>
                             </div>
                         </div>
 

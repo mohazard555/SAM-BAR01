@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Item, ItemStatus } from '../types';
 import { STATUS_CONFIG } from '../constants';
+import { PrintIcon, WhatsAppIcon, TelegramIcon, EditIcon } from './Icons';
 
 interface ItemModalProps {
     item: Item;
@@ -13,9 +14,21 @@ interface ItemModalProps {
     appName: string;
     appLogo: string | null;
     companyInfo: string;
+    onSwitchToEdit?: () => void;
 }
 
-export const ItemModal: React.FC<ItemModalProps> = ({ item, onSave, onClose, uniqueCustomers, isPreview, isPrintMode, appName, appLogo, companyInfo }) => {
+export const ItemModal: React.FC<ItemModalProps> = ({ 
+    item, 
+    onSave, 
+    onClose, 
+    uniqueCustomers, 
+    isPreview = false, 
+    isPrintMode = false,
+    appName,
+    appLogo,
+    companyInfo,
+    onSwitchToEdit
+}) => {
     const [formData, setFormData] = useState<Item>(item);
 
     useEffect(() => {
@@ -64,6 +77,36 @@ export const ItemModal: React.FC<ItemModalProps> = ({ item, onSave, onClose, uni
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSave(formData);
+    };
+
+    const handleWhatsAppShare = () => {
+        const text = `
+*تفاصيل الصنف*
+الباركود: ${item.barcode}
+العميل: ${item.customerName}
+تاريخ الاستلام: ${new Date(item.receivedAt).toLocaleDateString('ar-EG')}
+الكمية: ${item.quantity}
+السعر الإجمالي: ${item.totalPrice.toFixed(2)}
+الحالة: ${STATUS_CONFIG[item.status].label}
+المواصفات: ${item.specs || 'لا يوجد'}
+ملاحظات: ${item.notes || 'لا يوجد'}
+        `.trim();
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    };
+
+    const handleTelegramShare = () => {
+        const text = `
+تفاصيل الصنف
+الباركود: ${item.barcode}
+العميل: ${item.customerName}
+تاريخ الاستلام: ${new Date(item.receivedAt).toLocaleDateString('ar-EG')}
+الكمية: ${item.quantity}
+السعر الإجمالي: ${item.totalPrice.toFixed(2)}
+الحالة: ${STATUS_CONFIG[item.status].label}
+المواصفات: ${item.specs || 'لا يوجد'}
+ملاحظات: ${item.notes || 'لا يوجد'}
+        `.trim();
+        window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(text)}`, '_blank');
     };
     
     const formatDateForInput = (dateString: string | null) => {
@@ -132,6 +175,103 @@ export const ItemModal: React.FC<ItemModalProps> = ({ item, onSave, onClose, uni
                     {/* Footer/Signature */}
                     <div className="mt-20 pt-8 border-t text-center text-sm text-gray-600">
                         <p>التوقيع: _________________________</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (isPreview && !isPrintMode) {
+        return (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                    <div className="p-6">
+                        <div className="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">بطاقة الصنف</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 font-mono">{item.barcode}</p>
+                            </div>
+                            {appLogo && <img src={appLogo} alt="Logo" className="h-12 w-auto object-contain" />}
+                        </div>
+
+                        <div className="space-y-3 text-sm">
+                            <div className="flex justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
+                                <span className="text-gray-500 dark:text-gray-400">العميل:</span>
+                                <span className="font-medium">{item.customerName}</span>
+                            </div>
+                            <div className="flex justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
+                                <span className="text-gray-500 dark:text-gray-400">تاريخ الاستلام:</span>
+                                <span>{new Date(item.receivedAt).toLocaleDateString('ar-EG')}</span>
+                            </div>
+                            <div className="flex justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
+                                <span className="text-gray-500 dark:text-gray-400">الحالة:</span>
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_CONFIG[item.status].bgColor} ${STATUS_CONFIG[item.status].color}`}>
+                                    {STATUS_CONFIG[item.status].label}
+                                </span>
+                            </div>
+                            <div className="flex justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
+                                <span className="text-gray-500 dark:text-gray-400">الكمية:</span>
+                                <span>{item.quantity}</span>
+                            </div>
+                            <div className="flex justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
+                                <span className="text-gray-500 dark:text-gray-400">السعر الإجمالي:</span>
+                                <span className="font-bold text-primary-600 dark:text-primary-400">{item.totalPrice.toFixed(2)}</span>
+                            </div>
+                            {item.deliveryDate && (
+                                <div className="flex justify-between border-b border-gray-100 dark:border-gray-700 pb-2">
+                                    <span className="text-gray-500 dark:text-gray-400">تاريخ التسليم:</span>
+                                    <span>{new Date(item.deliveryDate).toLocaleDateString('ar-EG')}</span>
+                                </div>
+                            )}
+                            <div className="pt-2">
+                                <span className="text-gray-500 dark:text-gray-400 block mb-1">المواصفات:</span>
+                                <p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 p-2 rounded text-xs min-h-[40px]">
+                                    {item.specs || 'لا يوجد'}
+                                </p>
+                            </div>
+                            {item.notes && (
+                                <div className="pt-2">
+                                    <span className="text-gray-500 dark:text-gray-400 block mb-1">ملاحظات:</span>
+                                    <p className="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 p-2 rounded text-xs min-h-[40px]">
+                                        {item.notes}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 mt-6">
+                            <button 
+                                onClick={() => window.print()} 
+                                className="flex items-center justify-center gap-2 py-2 px-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
+                            >
+                                <PrintIcon className="w-4 h-4" /> طباعة
+                            </button>
+                            <button 
+                                onClick={handleWhatsAppShare} 
+                                className="flex items-center justify-center gap-2 py-2 px-4 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm"
+                            >
+                                <WhatsAppIcon className="w-4 h-4" /> واتساب
+                            </button>
+                            <button 
+                                onClick={handleTelegramShare} 
+                                className="flex items-center justify-center gap-2 py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+                            >
+                                <TelegramIcon className="w-4 h-4" /> تلغرام
+                            </button>
+                            <button 
+                                onClick={onSwitchToEdit} 
+                                className="flex items-center justify-center gap-2 py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors text-sm"
+                            >
+                                <EditIcon className="w-4 h-4" /> تعديل
+                            </button>
+                        </div>
+                        
+                        <button 
+                            onClick={onClose}
+                            className="w-full mt-4 py-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-sm font-medium"
+                        >
+                            إغلاق
+                        </button>
                     </div>
                 </div>
             </div>

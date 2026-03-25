@@ -30,6 +30,7 @@ const App: React.FC = () => {
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     const [isPreviewMode, setIsPreviewMode] = useState(false);
     const [isPrintMode, setIsPrintMode] = useState(false);
+    const [primaryColor, setPrimaryColor] = useState('#3b82f6');
 
     // Admin Credentials State
     const [adminUsername, setAdminUsername] = useState('admin');
@@ -56,6 +57,7 @@ const App: React.FC = () => {
         const savedCompanyInfo = localStorage.getItem('companyInfo');
         const savedAdminUsername = localStorage.getItem('adminUsername');
         const savedAdminPassword = localStorage.getItem('adminPassword');
+        const savedPrimaryColor = localStorage.getItem('primaryColor');
         
         if (savedAppName) setAppName(savedAppName);
         if (savedAppLogo) setAppLogo(savedAppLogo);
@@ -63,9 +65,77 @@ const App: React.FC = () => {
         if (savedCompanyInfo) setCompanyInfo(savedCompanyInfo);
         if (savedAdminUsername) setAdminUsername(savedAdminUsername);
         if (savedAdminPassword) setAdminPassword(savedAdminPassword);
+        if (savedPrimaryColor) setPrimaryColor(savedPrimaryColor);
 
         document.title = savedAppName || 'نظام مراقبة حركة الأصناف';
     }, []);
+
+    // Apply primary color to CSS variables
+    useEffect(() => {
+        const root = document.documentElement;
+        const hexToRgb = (hex: string) => {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        };
+
+        const rgb = hexToRgb(primaryColor);
+        if (rgb) {
+            // Simple shade generation logic
+            const shades = [
+                { name: '50', l: 0.95 },
+                { name: '100', l: 0.9 },
+                { name: '200', l: 0.8 },
+                { name: '300', l: 0.7 },
+                { name: '400', l: 0.6 },
+                { name: '500', l: 0.5 },
+                { name: '600', l: 0.4 },
+                { name: '700', l: 0.3 },
+                { name: '800', l: 0.2 },
+                { name: '900', l: 0.1 },
+                { name: '950', l: 0.05 },
+            ];
+
+            // Helper to adjust lightness
+            const adjustLightness = (r: number, g: number, b: number, factor: number) => {
+                const r_new = Math.round(r + (255 - r) * (1 - factor * 2));
+                const g_new = Math.round(g + (255 - g) * (1 - factor * 2));
+                const b_new = Math.round(b + (255 - b) * (1 - factor * 2));
+                
+                // Clamp values
+                const clamp = (val: number) => Math.max(0, Math.min(255, val));
+                
+                // If factor is 0.5, return original. If > 0.5, darken. If < 0.5, lighten.
+                // Actually let's use a simpler approach for now
+                if (factor === 0.5) return `rgb(${r}, ${g}, ${b})`;
+                
+                const mix = (color: number, target: number, f: number) => Math.round(color + (target - color) * f);
+                
+                if (factor > 0.5) {
+                    // Lighten
+                    const f = (factor - 0.5) * 2;
+                    return `rgb(${mix(r, 255, f)}, ${mix(g, 255, f)}, ${mix(b, 255, f)})`;
+                } else {
+                    // Darken
+                    const f = (0.5 - factor) * 2;
+                    return `rgb(${mix(r, 0, f)}, ${mix(g, 0, f)}, ${mix(b, 0, f)})`;
+                }
+            };
+
+            // Map shades to factors (0.5 is base color)
+            const shadeMap: any = {
+                '50': 0.95, '100': 0.9, '200': 0.8, '300': 0.7, '400': 0.6,
+                '500': 0.5, '600': 0.4, '700': 0.3, '800': 0.2, '900': 0.1, '950': 0.05
+            };
+
+            Object.keys(shadeMap).forEach(shade => {
+                root.style.setProperty(`--primary-${shade}`, adjustLightness(rgb.r, rgb.g, rgb.b, shadeMap[shade]));
+            });
+        }
+    }, [primaryColor]);
     
     // Save items to localStorage whenever they change
     useEffect(() => {
@@ -105,6 +175,7 @@ const App: React.FC = () => {
 
         if (existingItem) {
             setEditingItem(existingItem);
+            setIsPreviewMode(true); // Show card view for existing items
         } else {
             setEditingItem({
                 id: Date.now(),
@@ -156,6 +227,10 @@ const App: React.FC = () => {
         setIsModalOpen(true);
     };
 
+    const handleSwitchToEdit = () => {
+        setIsPreviewMode(false);
+    };
+
     const handlePrintItem = (item: Item) => {
         setEditingItem(item);
         setIsPrintMode(true);
@@ -182,6 +257,7 @@ const App: React.FC = () => {
         companyInfo: string;
         adminUsername: string;
         adminPassword: string;
+        primaryColor: string;
     }) => {
         setAppName(settings.appName);
         localStorage.setItem('appName', settings.appName);
@@ -192,6 +268,9 @@ const App: React.FC = () => {
         
         setCompanyInfo(settings.companyInfo);
         localStorage.setItem('companyInfo', settings.companyInfo);
+
+        setPrimaryColor(settings.primaryColor);
+        localStorage.setItem('primaryColor', settings.primaryColor);
 
         if (settings.appLogo) {
             setAppLogo(settings.appLogo);
@@ -386,29 +465,29 @@ const App: React.FC = () => {
                  )}
             </div>
 
-            <main className="container mx-auto p-4 sm:p-6 lg:p-8 flex-grow">
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 print-as-block">
-                    <div className="lg:col-span-3 order-2 lg:order-1 flex flex-col gap-6">
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 print-hide">
+            <main className="container mx-auto p-2 sm:p-4 lg:p-6 flex-grow max-w-[1000px]">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 print-as-block">
+                    <div className="lg:col-span-9 order-2 lg:order-1 flex flex-col gap-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 print-hide">
                            <BarcodeScanner onScan={handleScan} />
                         </div>
                         
                         <div className="flex flex-wrap gap-2 print-hide">
                              <input type="file" id="import-file" className="hidden" onChange={importFromXLSX} accept=".xlsx, .xls" />
-                             <label htmlFor="import-file" className="cursor-pointer flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600">
+                             <label htmlFor="import-file" className="cursor-pointer flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600">
                                 <ImportIcon /> استيراد XLSX
                              </label>
 
-                            <button onClick={exportToXLSX} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600">
+                            <button onClick={exportToXLSX} className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600">
                                 <ExportIcon /> تصدير XLSX
                             </button>
-                             <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700">
+                             <button onClick={handlePrint} className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700">
                                 <PrintIcon /> طباعة التقرير
                             </button>
                         </div>
                         
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                            <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white print-hide">قائمة الأصناف</h2>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                            <h2 className="text-md font-semibold mb-3 text-gray-800 dark:text-white print-hide">قائمة الأصناف</h2>
                             <ItemTable
                                 items={filteredItems}
                                 onEditItem={(item) => { setEditingItem(item); setIsModalOpen(true); }}
@@ -420,7 +499,7 @@ const App: React.FC = () => {
                             />
                         </div>
                     </div>
-                    <div className="lg:col-span-1 order-1 lg:order-2 flex flex-col gap-6 print-hide">
+                    <div className="lg:col-span-3 order-1 lg:order-2 flex flex-col gap-4 print-hide">
                          <FilterPanel
                             items={items}
                             filters={filters}
@@ -444,6 +523,7 @@ const App: React.FC = () => {
                     appName={appName}
                     appLogo={appLogo}
                     companyInfo={companyInfo}
+                    onSwitchToEdit={handleSwitchToEdit}
                 />
             )}
             
@@ -452,7 +532,7 @@ const App: React.FC = () => {
             {isSettingsModalOpen && <SettingsModal 
                 onClose={() => setIsSettingsModalOpen(false)} 
                 onSave={handleSaveSettings}
-                currentSettings={{ appName, appLogo, managerName, companyInfo, adminUsername, adminPassword }}
+                currentSettings={{ appName, appLogo, managerName, companyInfo, adminUsername, adminPassword, primaryColor }}
                 onExportJSON={exportJSON}
                 onImportJSON={importJSON}
             />}
