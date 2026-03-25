@@ -488,15 +488,17 @@ const App: React.FC = () => {
                         
                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
                             <h2 className="text-md font-semibold mb-3 text-gray-800 dark:text-white print-hide">قائمة الأصناف</h2>
-                            <ItemTable
-                                items={filteredItems}
-                                onEditItem={(item) => { setEditingItem(item); setIsModalOpen(true); }}
-                                onDeleteItem={handleDeleteItem}
-                                onPreviewItem={handlePreviewItem}
-                                onPrintItem={handlePrintItem}
-                                lastScannedBarcode={lastScannedBarcode}
-                                isAdmin={isAdmin}
-                            />
+                            <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
+                                <ItemTable
+                                    items={filteredItems}
+                                    onEditItem={(item) => { setEditingItem(item); setIsModalOpen(true); }}
+                                    onDeleteItem={handleDeleteItem}
+                                    onPreviewItem={handlePreviewItem}
+                                    onPrintItem={handlePrintItem}
+                                    lastScannedBarcode={lastScannedBarcode}
+                                    isAdmin={isAdmin}
+                                />
+                            </div>
                         </div>
                     </div>
                     <div className="lg:col-span-4 order-1 lg:order-2 flex flex-col gap-4 print-hide">

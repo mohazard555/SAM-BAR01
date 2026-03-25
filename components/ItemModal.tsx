@@ -145,7 +145,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
 
     if (isPrintMode) {
         return (
-            <div className="fixed inset-0 bg-white z-50 p-4 modal-print-container" onClick={onClose}>
+            <div className="fixed inset-0 bg-white z-50 p-4 modal-print-container print:static print:p-0" onClick={onClose}>
                 <div className="bg-white w-full max-w-2xl mx-auto p-8 print:p-0" onClick={(e) => e.stopPropagation()}>
                     {/* Company Header */}
                     <div className="print-header flex justify-between items-start border-b-2 border-black pb-4 mb-4">
