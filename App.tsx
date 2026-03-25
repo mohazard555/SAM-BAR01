@@ -465,9 +465,9 @@ const App: React.FC = () => {
                  )}
             </div>
 
-            <main className="container mx-auto p-2 sm:p-4 lg:p-6 flex-grow max-w-[1000px]">
+            <main className="container mx-auto p-2 sm:p-4 lg:p-6 flex-grow max-w-[1200px]">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 print-as-block">
-                    <div className="lg:col-span-9 order-2 lg:order-1 flex flex-col gap-4">
+                    <div className="lg:col-span-10 order-2 lg:order-1 flex flex-col gap-4">
                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 print-hide">
                            <BarcodeScanner onScan={handleScan} />
                         </div>
@@ -499,7 +499,7 @@ const App: React.FC = () => {
                             />
                         </div>
                     </div>
-                    <div className="lg:col-span-3 order-1 lg:order-2 flex flex-col gap-4 print-hide">
+                    <div className="lg:col-span-2 order-1 lg:order-2 flex flex-col gap-4 print-hide">
                          <FilterPanel
                             items={items}
                             filters={filters}

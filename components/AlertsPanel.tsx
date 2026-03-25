@@ -18,7 +18,7 @@ export const AlertsPanel: React.FC<AlertsPanelProps> = ({ undeliveredItems, onAl
                     {undeliveredItems.map(item => (
                         <li key={item.id}
                             onClick={() => onAlertClick(item.barcode)}
-                            className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors">
+                            className="p-2 rounded-md hover:bg-primary-100 dark:hover:bg-primary-900/30 cursor-pointer transition-colors">
                             <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">{item.customerName}</p>
                             <p className="text-xs text-gray-500 dark:text-gray-400">الباركود: {item.barcode}</p>
                         </li>

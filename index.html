@@ -52,6 +52,10 @@
       body {
         font-family: 'Tajawal', sans-serif;
         font-size: 105%;
+        background-color: var(--primary-50) !important;
+      }
+      .dark body {
+        background-color: #020617 !important; /* Deeper dark background (Slate 950) */
       }
       @media print {
         body {
@@ -59,7 +63,7 @@
           font-size: 10pt;
           color: black;
         }
-        header, footer, .print-hide {
+        header, footer, .print-hide, .print-hide-in-modal {
           display: none !important;
         }
         main {
@@ -69,6 +73,26 @@
         .print-show {
           display: block !important;
         }
+        
+        /* Specific isolation for modal printing */
+        body.printing-modal-item * {
+          visibility: hidden !important;
+        }
+        body.printing-modal-item .modal-print-container,
+        body.printing-modal-item .modal-print-container * {
+          visibility: visible !important;
+        }
+        body.printing-modal-item .modal-print-container {
+          position: absolute !important;
+          left: 0 !important;
+          top: 0 !important;
+          width: 100% !important;
+          display: block !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          background: white !important;
+        }
+        
         .print-header {
             display: flex;
             justify-content: space-between;
@@ -111,7 +135,7 @@
         thead {
           background-color: #f2f2f2;
           color: black;
-          display: table-header-group; /* Ensure header repeats on each page */
+          display: table-header-group;
         }
         .bg-white.dark\:bg-gray-800.rounded-lg.shadow.p-6 {
           box-shadow: none !important;
@@ -128,8 +152,8 @@
            border-radius: 9999px;
            font-weight: 500;
            border: 1px solid #ddd;
-           background-color: transparent !important; /* Remove background for printing */
-           color: black !important; /* Ensure text is visible */
+           background-color: transparent !important;
+           color: black !important;
         }
         .print-full-text {
             white-space: normal !important;
@@ -137,21 +161,7 @@
             max-width: none !important;
             overflow: visible !important;
         }
-        /* Styles for printing single item from modal */
-        body.printing-modal-item .fixed.inset-0 {
-            position: absolute !important;
-            background-color: transparent !important;
-        }
-        body.printing-modal-item .bg-white {
-            box-shadow: none !important;
-            border: none !important;
-        }
-         body.printing-modal-item .print-hide-in-modal {
-            display: none !important;
-        }
-        body.printing-modal-item .print-show {
-            display: none !important;
-        }
+        
         .print-full-width {
             grid-column: 1 / -1 !important;
         }
@@ -162,6 +172,40 @@
             display: block !important;
         }
       }
+      
+      /* Global Theme Overrides */
+      header {
+        background-color: var(--primary-600) !important;
+        color: white !important;
+      }
+      header h1, header button, header span, header svg {
+        color: white !important;
+      }
+      header button {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+      }
+      header button:hover {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+      }
+      footer {
+        background-color: var(--primary-600) !important;
+        color: white !important;
+      }
+      footer p {
+        color: white !important;
+      }
+      
+      /* Primary color for other elements */
+      .bg-primary-50 { background-color: var(--primary-50) !important; }
+      .bg-primary-100 { background-color: var(--primary-100) !important; }
+      .bg-primary-600 { background-color: var(--primary-600) !important; }
+      .text-primary-600 { color: var(--primary-600) !important; }
+      .text-primary-700 { color: var(--primary-700) !important; }
+      .border-primary-600 { border-color: var(--primary-600) !important; }
+      .hover\:bg-primary-100:hover { background-color: var(--primary-100) !important; }
+      .hover\:bg-primary-700:hover { background-color: var(--primary-700) !important; }
+      .focus\:ring-primary-500:focus { --tw-ring-color: var(--primary-500) !important; }
+      .focus\:border-primary-500:focus { border-color: var(--primary-500) !important; }
     </style>
   <script type="importmap">
 {
@@ -174,7 +218,7 @@
 </script>
 <link rel="stylesheet" href="/index.css">
 </head>
-  <body class="bg-gray-100 dark:bg-gray-900">
+  <body class="dark:bg-gray-900">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

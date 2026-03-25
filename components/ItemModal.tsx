@@ -36,16 +36,35 @@ export const ItemModal: React.FC<ItemModalProps> = ({
         setFormData(prev => ({ ...prev, totalPrice: total }));
     }, [formData.quantity, formData.unitPrice]);
 
+    const handlePrint = () => {
+        document.body.classList.add('printing-modal-item');
+        // Small delay to ensure CSS is applied before print dialog
+        setTimeout(() => {
+            window.print();
+            // We remove the class after print. 
+            // Note: some browsers might need this in afterprint listener
+            document.body.classList.remove('printing-modal-item');
+        }, 100);
+    };
+
     useEffect(() => {
         if (isPrintMode) {
-            document.body.classList.add('printing-modal-item');
-            setTimeout(() => {
-                window.print();
-                document.body.classList.remove('printing-modal-item');
+            handlePrint();
+            // Close after a delay to allow print dialog to open
+            const timer = setTimeout(() => {
                 onClose();
-            }, 200);
+            }, 500);
+            return () => clearTimeout(timer);
         }
     }, [isPrintMode, onClose]);
+
+    useEffect(() => {
+        const afterPrint = () => {
+            document.body.classList.remove('printing-modal-item');
+        };
+        window.addEventListener('afterprint', afterPrint);
+        return () => window.removeEventListener('afterprint', afterPrint);
+    }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -126,8 +145,8 @@ export const ItemModal: React.FC<ItemModalProps> = ({
 
     if (isPrintMode) {
         return (
-            <div className="fixed inset-0 bg-white z-50 p-4 print:absolute print:bg-transparent" onClick={onClose}>
-                <div className="bg-white w-full max-w-2xl mx-auto p-8 print:shadow-none print:p-0" onClick={(e) => e.stopPropagation()}>
+            <div className="fixed inset-0 bg-white z-50 p-4 modal-print-container" onClick={onClose}>
+                <div className="bg-white w-full max-w-2xl mx-auto p-8 print:p-0" onClick={(e) => e.stopPropagation()}>
                     {/* Company Header */}
                     <div className="print-header flex justify-between items-start border-b-2 border-black pb-4 mb-4">
                         <div className="print-header-info text-right">
@@ -241,7 +260,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
 
                         <div className="grid grid-cols-2 gap-2 mt-6">
                             <button 
-                                onClick={() => window.print()} 
+                                onClick={handlePrint} 
                                 className="flex items-center justify-center gap-2 py-2 px-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
                             >
                                 <PrintIcon className="w-4 h-4" /> طباعة
@@ -283,8 +302,8 @@ export const ItemModal: React.FC<ItemModalProps> = ({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl transform transition-all" onClick={(e) => e.stopPropagation()}>
                 <form onSubmit={handleSubmit}>
-                    <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                        <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white">
+                    <div className="px-6 py-4 bg-primary-600 text-white rounded-t-lg">
+                        <h3 className="text-lg font-medium leading-6">
                            {isPreview ? 'معاينة الصنف' : 'تفاصيل الصنف'} - {item.barcode}
                         </h3>
                     </div>

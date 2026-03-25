@@ -63,10 +63,10 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, onEditItem, onDelet
     return (
         <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-700">
+                <thead className="bg-primary-50 dark:bg-primary-900/30">
                     <tr>
                         {headers.map(header => (
-                             <th key={header.key} scope="col" onClick={() => handleSort(header.key)} className={`px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer ${header.className}`}>
+                             <th key={header.key} scope="col" onClick={() => handleSort(header.key)} className={`px-6 py-3 text-right text-xs font-medium text-primary-700 dark:text-primary-300 uppercase tracking-wider cursor-pointer ${header.className}`}>
                                 <div className="flex items-center gap-2 justify-end">
                                     {renderSortIcon(header.key)}
                                     <span>{header.label}</span>

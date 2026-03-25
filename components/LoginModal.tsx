@@ -19,11 +19,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onLogin, onClose }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={onClose}>
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
                 <form onSubmit={handleSubmit}>
-                    <div className="p-6">
-                        <div className="flex flex-col items-center mb-4">
-                            <UserIcon className="w-12 h-12 text-primary-600 mb-2"/>
-                            <h3 className="text-lg font-medium text-gray-900 dark:text-white">دخول المدير</h3>
+                    <div className="p-6 bg-primary-600 text-white rounded-t-lg">
+                        <div className="flex flex-col items-center">
+                            <UserIcon className="w-12 h-12 text-white mb-2"/>
+                            <h3 className="text-lg font-medium">دخول المدير</h3>
                         </div>
+                    </div>
+                    <div className="p-6">
                         <div className="space-y-4">
                              <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">اسم المستخدم</label>
