@@ -49,16 +49,16 @@ export const ItemTable: React.FC<ItemTableProps> = ({ items, onEditItem, onDelet
     };
     
     const headers: { key: SortKey; label: string; className?: string }[] = [
-        { key: 'receivedAt', label: 'تاريخ الاستلام', className: 'w-1/12' },
-        { key: 'barcode', label: 'الباركود', className: 'w-1/12' },
-        { key: 'customerName', label: 'العميل', className: 'w-1/12' },
-        { key: 'specs', label: 'المواصفات', className: 'w-2/12' },
-        { key: 'notes', label: 'ملاحظات', className: 'w-2/12' },
-        { key: 'quantity', label: 'الكمية', className: 'w-1/12' },
-        { key: 'unitPrice', label: 'السعر', className: 'w-1/12' },
-        { key: 'totalPrice', label: 'الإجمالي', className: 'w-1/12' },
-        { key: 'deliveryDate', label: 'تاريخ التسليم', className: 'w-1/12' },
-        { key: 'status', label: 'الحالة', className: 'w-1/12 text-center' },
+        { key: 'receivedAt', label: 'تاريخ الاستلام', className: 'w-[120px]' },
+        { key: 'barcode', label: 'الباركود', className: 'w-[100px]' },
+        { key: 'customerName', label: 'العميل', className: 'w-[150px]' },
+        { key: 'specs', label: 'المواصفات', className: 'min-w-[200px]' },
+        { key: 'notes', label: 'ملاحظات', className: 'min-w-[150px]' },
+        { key: 'quantity', label: 'الكمية', className: 'w-[60px]' },
+        { key: 'unitPrice', label: 'السعر', className: 'w-[80px]' },
+        { key: 'totalPrice', label: 'الإجمالي', className: 'w-[100px]' },
+        { key: 'deliveryDate', label: 'تاريخ التسليم', className: 'w-[120px]' },
+        { key: 'status', label: 'الحالة', className: 'w-[100px] text-center' },
     ];
 
     return (
